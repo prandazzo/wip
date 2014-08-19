@@ -148,7 +148,9 @@
         </dependency>
     </dependencies>
     <build>
+    
         <finalName>wip-portlet</finalName>
+        <pluginManagement>
         <plugins>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -198,5 +200,6 @@
                 </executions>
             </plugin>
         </plugins>
+        </pluginManagement>
     </build>
 </project>
