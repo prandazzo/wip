@@ -25,7 +25,7 @@
     <xsl:variable name="jstrans" select="jstransformer:new( $request, $response, $actualUrl )"/>
     <xsl:variable name="csstrans" select="csstransformer:new( $request, $response, $actualUrl )"/>
 
-    <xsl:include href="clipping"/>
+    <xsl:include href="default-config_clipping.xslt"/>
 
     <xsl:template match="/">
         <!-- Process nothing else outside of HTML/HEAD & HTML/BODY nodes -->
