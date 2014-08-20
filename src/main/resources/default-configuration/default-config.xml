@@ -26,7 +26,7 @@
 
         <absolutePositioning>true</absolutePositioning>
 
-        <addPrefix>true</addPrefix>
+        <addPrefix>false</addPrefix>
 
         <customCss></customCss>
 
