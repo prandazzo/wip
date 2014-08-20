@@ -36,6 +36,7 @@ import javax.portlet.*;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.IOException;
+import java.util.Enumeration;
 import java.util.UUID;
 import java.util.logging.Logger;
 
@@ -114,54 +115,76 @@ public class WIPortlet extends GenericPortlet {
 	@Override
 	protected void doView(RenderRequest request, RenderResponse response) throws PortletException, IOException {
 		checkIsConfigurationSet(request);
-		WIPConfiguration configuration = WIPUtil.getConfiguration(request);
 		
-		PortletWindow windowState = PortletWindow.getInstance(request);
+		// Generate proxy url
+		PortletURL proxyUrl = response.createRenderURL();
+	    Enumeration params = request.getParameterNames();
+	    
+	    while(params.hasMoreElements()) {
+	    	String pname = params.nextElement().toString();
+	    	proxyUrl.setParameter(pname, request.getParameter(pname));
+	    }  
+	    proxyUrl.setWindowState(new WindowState("exclusive"));
+      	request.setAttribute("proxyUrl", proxyUrl.toString());
 		
-		// reset if the used configuration has changed
-		if(windowState.getConfiguration().getTimestamp() != configuration.getTimestamp()) {
-			PortletWindow.clearInstance(request);
-			windowState = PortletWindow.getInstance(request);
-		}
-		
-		Response wipResponse = null;
-		UUID uuid = windowState.getResponseID();
-		// A request has just been processed in the ACTION phase
-		if (uuid != null) {
-			// Get response from store & send it
-			wipResponse = ResponseStore.getInstance().remove(uuid);
-			windowState.setResponseID(null);
-		}
-
-		// If no pending response, create a new request
-		if (wipResponse == null) {
-			String requestUrl = windowState.getActualURL();
-			RequestBuilder wipRequest = RequestBuilderFactory.INSTANCE.getRequest(request, requestUrl, RequestBuilder.ResourceType.HTML, RequestBuilder.HttpMethod.GET, null, false);
-
-			// TODO: copy global parameters from PortletRequest ?
-			
-            if(WIPUtil.isDebugMode(request))
-            	WIPLogging.INSTANCE.resetForUrl(wipRequest.getRequestedURL());
-
-			// Execute request
-			wipResponse = executor.execute(wipRequest, request, response);
-		}
-		
-		// Set Portlet title
-		response.setTitle(WIPUtil.getConfiguration(request).getPortletTitle());
-
-		// Check if authentication is requested by remote host
-		if (windowState.getRequestedAuthSchemes() != null) {
-			// Redirecting to the form
-			String location = Pages.AUTH.getPath();
-			PortletRequestDispatcher portletRequestDispatcher = getPortletContext().getRequestDispatcher(location);
+      	// Render widget Portlet (iframe)
+		if ( ! request.getWindowState().equals(new WindowState("exclusive"))) {
+			PortletRequestDispatcher portletRequestDispatcher = getPortletContext().getRequestDispatcher(Pages.WIDGET.getPath());
 			portletRequestDispatcher.include(request, response);
-		} else {
-			// Print content
-			wipResponse.printResponseContent(request, response, windowState.isAuthenticated());
-		}
+			return ;
 		
-		WIPLogging.INSTANCE.closeTransformLogFile();
+		// Render proxy output
+		} else {
+
+			WIPConfiguration configuration = WIPUtil.getConfiguration(request);
+			
+			PortletWindow windowState = PortletWindow.getInstance(request);
+			
+			// reset if the used configuration has changed
+			if(windowState.getConfiguration().getTimestamp() != configuration.getTimestamp()) {
+				PortletWindow.clearInstance(request);
+				windowState = PortletWindow.getInstance(request);
+			}
+			
+			Response wipResponse = null;
+			UUID uuid = windowState.getResponseID();
+			// A request has just been processed in the ACTION phase
+			if (uuid != null) {
+				// Get response from store & send it
+				wipResponse = ResponseStore.getInstance().remove(uuid);
+				windowState.setResponseID(null);
+			}
+	
+			// If no pending response, create a new request
+			if (wipResponse == null) {
+				String requestUrl = windowState.getActualURL();
+				RequestBuilder wipRequest = RequestBuilderFactory.INSTANCE.getRequest(request, requestUrl, RequestBuilder.ResourceType.HTML, RequestBuilder.HttpMethod.GET, null, false);
+	
+				// TODO: copy global parameters from PortletRequest ?
+				
+	            if(WIPUtil.isDebugMode(request))
+	            	WIPLogging.INSTANCE.resetForUrl(wipRequest.getRequestedURL());
+	
+				// Execute request
+				wipResponse = executor.execute(wipRequest, request, response);
+			}
+			
+			// Set Portlet title
+			response.setTitle(WIPUtil.getConfiguration(request).getPortletTitle());
+	
+			// Check if authentication is requested by remote host
+			if (windowState.getRequestedAuthSchemes() != null) {
+				// Redirecting to the form
+				String location = Pages.AUTH.getPath();
+				PortletRequestDispatcher portletRequestDispatcher = getPortletContext().getRequestDispatcher(location);
+				portletRequestDispatcher.include(request, response);
+			} else {
+				// Print content
+				wipResponse.printResponseContent(request, response, windowState.isAuthenticated());
+			}
+			
+			WIPLogging.INSTANCE.closeTransformLogFile();
+		}
 	}
 
 	/**

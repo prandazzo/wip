@@ -28,41 +28,49 @@
     <xsl:include href="default-config_clipping.xslt"/>
 
     <xsl:template match="/">
-        <!-- Process nothing else outside of HTML/HEAD & HTML/BODY nodes -->
-        <xsl:apply-templates select="/html:HTML/html:HEAD"/>
-        <xsl:apply-templates select="/html:HTML/html:BODY"/>
-    </xsl:template>
-
+		<xsl:element name="HTML">
+          <xsl:copy-of select="@*"/>
+	      <xsl:apply-templates select="/html:HTML/html:HEAD"/>
+    	  <xsl:apply-templates select="/html:HTML/html:BODY"/>
+        </xsl:element>
+    </xsl:template>            
+                  
     <xsl:template match="/html:HTML/html:HEAD">
-        <!-- Process only STYLE & SCRIPT nodes as well as CSS LINK -->
-        <xsl:apply-templates select="html:STYLE"/>
-        <xsl:apply-templates select="html:LINK[@rel='stylesheet']"/>
-        <xsl:apply-templates select="html:SCRIPT"/>
-        <!-- Call included 'head-clipping' template for additional processing -->
-        <xsl:call-template name="head-clipping"/>
+      	<xsl:element name="HEAD">
+          <!-- Process only STYLE & SCRIPT nodes as well as CSS LINK -->
+          <xsl:apply-templates select="html:STYLE"/>
+          <xsl:apply-templates select="html:LINK[@rel='stylesheet']"/>
+          <xsl:apply-templates select="html:SCRIPT"/>
+          <!-- Call included 'head-clipping' template for additional processing -->
+          <xsl:call-template name="head-clipping"/>
+      	</xsl:element>
     </xsl:template>
     
     <xsl:template match="/html:HTML/html:BODY">
         <!-- Create a new SCRIPT node with BODY @onload content -->
-        <xsl:apply-templates select="@onload"/>
-        <!-- Create an enclosing DIV with a class attribute passed as a parameter to this stylesheet by the WIPortlet -->
-        <xsl:element name="DIV">
-            <xsl:attribute name="class">
-                <xsl:value-of select=" $wip_divClassName "/>
-            </xsl:attribute>
-            <!-- Create another enclosing DIV with the same class attribute than the original BODY -->
-            <xsl:element name="DIV">
-                <xsl:attribute name="class">
-                    <xsl:value-of select="@class"/>
-                </xsl:attribute>
-                <!-- Process children nodes of BODY with included 'body-clipping' template -->
-                <xsl:call-template name="body-clipping"/>
-            </xsl:element>
-            <!-- Create a STYLE node with custom CSS from transformer -->
-            <xsl:element name="STYLE">
-                <xsl:value-of disable-output-escaping="yes" select="csstransformer:getCustomCss($csstrans)"/>
-            </xsl:element>
-        </xsl:element>
+      	<xsl:element name="BODY">
+          <xsl:attribute name="onLoad">
+            <xsl:value-of select="@onload"/>
+          </xsl:attribute>  
+          <!-- Create an enclosing DIV with a class attribute passed as a parameter to this stylesheet by the WIPortlet -->
+          <xsl:element name="DIV">
+              <xsl:attribute name="class">      
+                  <xsl:value-of select=" $wip_divClassName "/>
+              </xsl:attribute>
+              <!-- Create another enclosing DIV with the same class attribute than the original BODY -->
+              <xsl:element name="DIV">
+                  <xsl:attribute name="class">
+                      <xsl:value-of select="@class"/>
+                  </xsl:attribute>
+                  <!-- Process children nodes of BODY with included 'body-clipping' template -->
+                  <xsl:call-template name="body-clipping"/>
+              </xsl:element>
+              <!-- Create a STYLE node with custom CSS from transformer -->
+              <xsl:element name="STYLE">
+                  <xsl:value-of disable-output-escaping="yes" select="csstransformer:getCustomCss($csstrans)"/>
+              </xsl:element>
+          </xsl:element>
+      	</xsl:element>
     </xsl:template>
 
     <!-- Rewrite SCRIPT nodes -->
@@ -192,16 +200,6 @@
         <xsl:attribute name="{name()}">
             <xsl:value-of select="urlfactory:createProxyUrl( $urlfact, ., 'GET', 'RAW', $response)"/>
         </xsl:attribute>
-    </xsl:template>
-
-    <!-- Rewrite onload attributes into SCRIPT elements -->
-    <xsl:template match="@onload">
-        <xsl:element name="SCRIPT">
-            <xsl:attribute name="type">
-                <xsl:text>text/javascript</xsl:text>
-            </xsl:attribute>
-            <xsl:value-of select="jstransformer:transform( $jstrans, .)"/>
-        </xsl:element>
     </xsl:template>
 
     <!-- Rewrite various javascript attributes-->
