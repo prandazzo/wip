@@ -46,7 +46,7 @@
             out.print("style=\"display:none;\"");%>>
             <label for="domainsToProxy"><fmt:message key="wip.config.domainstoproxy"/> :</label>
             <input type="text" name="domainsToProxy" id="domainsToProxy"
-                   value="<%=StringUtils.join(wipConf.getDomainsToProxy(), ";")%>"/>
+                   value="<%=StringUtils.join(wipConf.getDomainsToProxy().toArray(), ";")%>"/>
             <%=printHelp("wip.help.domainstoproxy", locale)%>
             <%=printError("domainsToProxy", errors)%>
         </p>

@@ -10,7 +10,9 @@
     <tlib-version>1.1</tlib-version>
     <short-name>fmt</short-name>
     <uri>http://java.sun.com/jsp/jstl/fmt</uri>
-
+    
+<!-- disable validation on weblogic --> 
+<!--
     <validator>
         <description>
             Provides core validation features for JSTL tags.
@@ -19,7 +21,7 @@
             org.apache.taglibs.standard.tlv.JstlFmtTLV
         </validator-class>
     </validator>
-
+ -->
     <tag>
         <description>
             Sets the request character encoding
